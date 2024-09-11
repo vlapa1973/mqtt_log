@@ -9,9 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 folder_archive_name = str("data")
-
 
 broker = os.getenv('BROKER')
 port = int(os.getenv('PORT'))
@@ -19,7 +17,6 @@ topic = os.getenv('TOPIC')
 client_id2 = os.getenv('CLIENT_ID2')
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
-
 
 timeIn = time.time()
 fileNameTemp = ''
@@ -70,10 +67,6 @@ def subscribe(client: mqtt):
             elif len(msg.topic) < 32:
                 topicNew = msg.topic + "\t"
 
-            # print(
-            #     f"{time.strftime('%H:%M:%S', time.localtime())}:\t{
-            #         topicNew}:\t{msg.payload.decode()}"
-            # )
             file_print(msg.topic, msg.payload.decode())
         except Exception as error:
             print(error)
@@ -84,7 +77,7 @@ def subscribe(client: mqtt):
 
 def fileWrite(folderArhiveName, path, myFile):
     """ Запись в файл. Передаем: название папки архива, название файла (топика), данные """
-    file_name_path = folderArhiveName + myFile[:myFile.lfind(' ')]
+    file_name_path = folderArhiveName + myFile[:myFile.find(' ')]
 
     pathTemp = f"{Path.cwd()}/{file_name_path}"
 
