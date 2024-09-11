@@ -44,7 +44,7 @@ def file_print(data_string, data_data):
 
         fileNameTemp = fileName
         path1 = f"{fileNameTemp}.csv"
-        my_file1 += f"{time.strftime('/%Y/%m/%d - %H:%M:%S', time.localtime())} * {data_data}"
+        my_file1 += f"{time.strftime('/%Y/%m/%d - %H:%M:%S', time.localtime())}_*{data_data}"
 
     else:   
         my_file1 += f",{data_data}"
@@ -85,7 +85,7 @@ def fileWrite(folderArhiveName, path, myFile):
         Path(pathTemp).mkdir(parents=True, exist_ok=True)
 
     my_file = open(f"{pathTemp}/{path}", "a")
-    my_file.write(myFile + '\n')
+    my_file.write(myFile[myFile.rfind(' ') :] + '\n')
     my_file.close() 
     print('\n---------------')
     print(myFile)
