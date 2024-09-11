@@ -4,10 +4,11 @@ import os
 import paho.mqtt.client as mqtt
 import time
 from pathlib import Path
-
 from dotenv import load_dotenv
 
+
 load_dotenv()
+
 
 folder_archive_name = str("data")
 
@@ -15,33 +16,45 @@ folder_archive_name = str("data")
 broker = os.getenv('BROKER')
 port = int(os.getenv('PORT'))
 topic = os.getenv('TOPIC')
-topic2 = os.getenv('TOPIC2')
 client_id2 = os.getenv('CLIENT_ID2')
 username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
 
 
+timeIn = time.time()
+fileNameTemp = ''
+path1 = ''
+my_file1 = ''
+flagWrite = False
+
 def file_print(data_string, data_data):
+    """ Обработчик данных от сервера MQTT. Передаем: топик, данные """
+    fileName = data_string[1 : data_string.rfind("/")]
+    
+    global timeIn, fileNameTemp, path1, my_file1, folder_archive_name, flagWrite
+    if ((time.time() - timeIn) > 3):
+            fileNameTemp = ''
+            timeIn = time.time()
+            flagWrite = True
 
-    file_name = data_string[: data_string.rfind("/")]
-    file_name_tmp = data_string[data_string.rfind("/") :]
-    file_name_path = folder_archive_name + time.strftime("/%Y/%m/%d/", time.localtime())
+    if (fileNameTemp != fileName):
+        if (bool(path1 != '') & flagWrite):
+            fileWrite(folder_archive_name, path1, my_file1)
+            flagWrite = False
+        
+        timeIn = time.time()
+        my_file1 = ''
 
-    path = f"{Path.cwd()}/{file_name_path}/{file_name}"
+        fileNameTemp = fileName
+        path1 = f"{fileNameTemp}.csv"
+        my_file1 += f"{time.strftime('%H:%M:%S', time.localtime())},{data_data}"
 
-    if not Path(path).exists():
-        Path(path).mkdir(parents=True, exist_ok=True)
-
-    path = f"{path}{file_name_tmp}.csv"
-
-    my_file = open(path, "a")
-    my_file.write(f"{time.strftime('%H:%M:%S', time.localtime())},{data_data}\n")
-    my_file.close()
+    else:   
+        my_file1 += f",{data_data}"
 
 
 def connect_mqtt():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-
     client.username_pw_set(username, password)
     client.connect(broker, port)
     return client
@@ -57,9 +70,10 @@ def subscribe(client: mqtt):
             elif len(msg.topic) < 32:
                 topicNew = msg.topic + "\t"
 
-            print(
-                f"{time.strftime('%H:%M:%S', time.localtime())}:\t{topicNew}:\t{msg.payload.decode()}"
-            )
+            # print(
+            #     f"{time.strftime('%H:%M:%S', time.localtime())}:\t{
+            #         topicNew}:\t{msg.payload.decode()}"
+            # )
             file_print(msg.topic, msg.payload.decode())
         except Exception as error:
             print(error)
@@ -68,12 +82,35 @@ def subscribe(client: mqtt):
     client.on_message = on_message
 
 
+def fileWrite(folderArhiveName, path, myFile):
+    """ Запись в файл. Передаем: название папки архива, название файла (топика), данные """
+    file_name_path = folderArhiveName + \
+        time.strftime("/%Y/%m/%d/", time.localtime())
+
+    pathTemp = f"{Path.cwd()}/{file_name_path}"
+
+    if not Path(pathTemp).exists():
+        Path(pathTemp).mkdir(parents=True, exist_ok=True)
+
+    my_file = open(f"{pathTemp}/{path}", "a")
+    my_file.write(myFile + '\n')
+    my_file.close() 
+    print('\n---------------')
+    print(myFile)
+    print('---------------')
+    print('my_File= ', path)
+
+
 def run():
     try:
         client = connect_mqtt()
-        countMy = subscribe(client)
+        subscribe(client)
         client.loop_forever()
     except KeyboardInterrupt:
+        global path1, folder_archive_name, my_file1
+        if (path1 != ''):
+            fileWrite(folder_archive_name, path1, my_file1)
+
         print("\nBye bye !")
         return 0
 
