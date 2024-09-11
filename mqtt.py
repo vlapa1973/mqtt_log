@@ -47,7 +47,7 @@ def file_print(data_string, data_data):
 
         fileNameTemp = fileName
         path1 = f"{fileNameTemp}.csv"
-        my_file1 += f"{time.strftime('%H:%M:%S', time.localtime())},{data_data}"
+        my_file1 += f"{time.strftime('/%Y/%m/%d - %H:%M:%S', time.localtime())} * {data_data}"
 
     else:   
         my_file1 += f",{data_data}"
@@ -84,8 +84,7 @@ def subscribe(client: mqtt):
 
 def fileWrite(folderArhiveName, path, myFile):
     """ Запись в файл. Передаем: название папки архива, название файла (топика), данные """
-    file_name_path = folderArhiveName + \
-        time.strftime("/%Y/%m/%d/", time.localtime())
+    file_name_path = folderArhiveName + myFile[:myFile.lfind(' ')]
 
     pathTemp = f"{Path.cwd()}/{file_name_path}"
 
